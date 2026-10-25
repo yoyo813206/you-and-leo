@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>You & Leo</title>
+<style>
+:root {
+  --bg: #edf6f3;
+  --panel: #ffffff;
+  --accent: #a9d5ca;
+  --text: #344944;
+  --muted: #7b918b;
+  --bubble: #e0f0eb;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, "Noto Sans SC", sans-serif;
+}
+button, input { font: inherit; }
+button {
+  border: 0;
+  border-radius: 14px;
+  padding: 10px 14px;
+  background: var(--accent);
+  color: #29463f;
+  cursor: pointer;
+}
+.app {
+  max-width: 680px;
+  height: 100dvh;
+  min-height: 480px;
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  background: var(--panel);
+}
+header {
+  padding: 20px 18px 14px;
+  background: var(--bg);
+  border-bottom: 1px solid #e1ece8;
+}
+.brand { display: flex; align-items: center; gap: 12px; }
+.avatar {
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  background: #d5ebe4;
+  font-size: 25px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.avatar img { width: 100%; height: 100%; object-fit: cover; }
+h1 { margin: 0; font-size: 21px; }
+.subtitle { color: var(--muted); font-size: 13px; margin-top: 3px; }
+.toolbar { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+.toolbar button { font-size: 13px; }
+#messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 15px;
+  background: var(--panel);
+}
+.welcome {
+  color: var(--muted);
+  text-align: center;
+  font-size: 14px;
+  padding: 24px 8px;
+}
+.message { display: flex; gap: 9px; margin: 15px 0; align-items: flex-end; }
+.message.me { flex-direction: row-reverse; }
+.mini-avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  display: grid; place-items: center; background: var(--bg);
+  flex-shrink: 0; overflow: hidden;
+}
+.mini-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.bubble {
+  max-width: 78%;
+  padding: 11px 14px;
+  border-radius: 16px 16px 16px 5px;
+  background: var(--bubble);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.6;
+}
+.me .bubble { background: var(--accent); border-radius: 16px 16px 5px 16px; }
+.composer {
+  padding: 12px;
+  display: flex; gap: 8px;
+  border-top: 1px solid #e1ece8;
+  background: var(--bg);
+}
+.composer input {
+  min-width: 0; flex: 1;
+  border: 1px solid #d9e8e2;
+  border-radius: 18px;
+  padding: 12px 14px;
+  outline-color: var(--accent);
+  background: white;
+}
+footer { text-align: center; font-size: 11px; color: var(--muted); padding: 7px; }
+@media (min-width: 600px) {
+  body { padding: 16px; }
+  .app { height: calc(100dvh - 32px); border-radius: 22px; overflow: hidden; box-shadow: 0 8px 30px #43675b12; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand">
+      <div class="avatar" id="leoAvatar">🌿</div>
+      <div>
+        <h1 id="title">You & Leo</h1>
+        <div class="subtitle">你的小小聊天空间 · 本地演示版</div>
+      </div>
+    </div>
+    <div class="toolbar">
+      <button id="namesBtn">修改昵称</button>
+      <button id="avatarBtn">更换头像</button>
+      <button id="themeBtn">切换主题</button>
+      <button id="clearBtn">清空聊天</button>
+      <input id="avatarFile" type="file" accept="image/*" hidden>
+    </div>
+  </header>
+
+  <main id="messages" aria-live="polite">
+    <div class="welcome" id="welcome">
+      欢迎来到 you-and-leo 🌱<br>
+      这里是小窝的第一版，先试试界面吧。
+    </div>
+  </main>
+
+  <form class="composer" id="chatForm">
+    <input id="messageInput" maxlength="2000" placeholder="说点什么……" autocomplete="off">
+    <button type="submit">发送</button>
+  </form>
+  <footer>初版 · 消息暂存在当前页面，尚未连接 AI</footer>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+let myName = "You";
+let leoName = "Leo";
+let myAvatar = "🫧";
+let leoAvatar = "🌿";
+let photoData = "";
+let theme = 0;
+
+function addMessage(text, mine) {
+  $("welcome")?.remove();
+
+  const row = document.createElement("div");
+  row.className = "message" + (mine ? " me" : "");
+
+  const face = document.createElement("div");
+  face.className = "mini-avatar";
+
+  if (mine) {
+    face.textContent = myAvatar;
+  } else if (photoData) {
+    const img = document.createElement("img");
+    img.src = photoData;
+    img.alt = leoName + "头像";
+    face.appendChild(img);
+  } else {
+    face.textContent = leoAvatar;
+  }
+
+  const bubble = document.createElement("div");
+  bubble.className = "bubble";
+  bubble.textContent = text;
+
+  row.append(face, bubble);
+  $("messages").appendChild(row);
+  $("messages").scrollTop = $("messages").scrollHeight;
+}
+
+$("chatForm").addEventListener("submit", event => {
+  event.preventDefault();
+  const input = $("messageInput");
+  const text = input.value.trim();
+  if (!text) return;
+
+  addMessage(text, true);
+  input.value = "";
+
+  setTimeout(() => {
+    addMessage("我收到这条消息啦！目前这里还是本地演示版，等我们接入 AI 后，我才能真正回复你。", false);
+  }, 350);
+});
+
+$("namesBtn").addEventListener("click", () => {
+  const newMe = prompt("给自己的聊天昵称起个名字：", myName);
+  if (newMe && newMe.trim()) myName = newMe.trim();
+
+  const newLeo = prompt("给另一方起个名字：", leoName);
+  if (newLeo && newLeo.trim()) leoName = newLeo.trim();
+
+  $("title").textContent = myName + " & " + leoName;
+});
+
+$("avatarBtn").addEventListener("click", () => $("avatarFile").click());
+
+$("avatarFile").addEventListener("change", event => {
+  const file = event.target.files[0];
+  if (!file) return;
+  if (!file.type.startsWith("image/")) {
+    alert("请选择图片文件。");
+    return;
+  }
+  if (file.size > 3 * 1024 * 1024) {
+    alert("图片请控制在 3MB 以内。");
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    photoData = reader.result;
+    $("leoAvatar").innerHTML = "";
+    const img = document.createElement("img");
+    img.src = photoData;
+    img.alt = "自定义头像";
+    $("leoAvatar").appendChild(img);
+  };
+  reader.readAsDataURL(file);
+});
+
+$("themeBtn").addEventListener("click", () => {
+  theme = (theme + 1) % 3;
+  const themes = [
+    ["#edf6f3", "#a9d5ca", "#344944", "#e0f0eb"],
+    ["#eef2fb", "#b7c9ee", "#35435d", "#e4ebfa"],
+    ["#f6f1e9", "#d9c5a6", "#514537", "#f0e5d4"]
+  ];
+  const [bg, accent, text, bubble] = themes[theme];
+  document.documentElement.style.setProperty("--bg", bg);
+  document.documentElement.style.setProperty("--accent", accent);
+  document.documentElement.style.setProperty("--text", text);
+  document.documentElement.style.setProperty("--bubble", bubble);
+});
+
+$("clearBtn").addEventListener("click", () => {
+  if (!confirm("确定清空当前聊天吗？")) return;
+  $("messages").innerHTML = '<div class="welcome" id="welcome">聊天已清空，我们重新开始吧。🌱</div>';
+});
+</script>
+</body>
+  </html>
